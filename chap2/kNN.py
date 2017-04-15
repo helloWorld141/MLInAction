@@ -36,3 +36,42 @@ def file2matrix(filename):
 		classLabelVector.append(int(listFromLine[-1]))
 		index+=1
 	return returnMat, classLabelVector
+
+def autoNorm(dataset): #class(dataset) = numpy matrix
+	minVals = dataset.min(0)
+	maxVals = dataset.max(0)
+	ranges = maxVals - minVals
+	normDataset = zeros(shape(dataset))
+	m = dataset.shape[0] #number of rows in dataset, i.e number of samplesd
+	normDataset = dataset - tile(minVals, (m,1))
+	normDataset = normDataset/tile(ranges, (m,1)) # / is element wise division, NOT matrix division
+	return normDataset, ranges, minVals
+
+def datingClassTest():
+	hoRatio = 0.10
+	data, labels = file2matrix('datingTestSet2.txt')
+	normdata, ranges, mins = autoNorm(data)
+	m = normdata.shape[0]
+	numTestCases = int(m*hoRatio)
+	errCnt = 0.0
+	for i in range(numTestCases):
+		classifierResult = classify0(normdata[i,:], normdata[numTestCases:m, :], \
+										labels[numTestCases:m] ,3)
+		print("The classifier came back with: %d, the real answer is: %d" % (classifierResult, labels[i]))
+		if (classifierResult != labels[i]):
+			errCnt+=1.0
+	print("\nThe total error rate is: %f" % (errCnt/float(numTestCases)))
+
+def classifyPerson():
+	resultList = ['not at all','in small doses', 'in large doses']
+	percentTats = float(input(\
+						"percentage of time spent playing video games?"))
+	ffMiles = float(input("frequent flier miles earned per year?"))
+	iceCream = float(input("liters of ice cream consumed per year?"))
+	datingDataMat,datingLabels = file2matrix('datingTestSet2.txt')
+	normMat, ranges, minVals = autoNorm(datingDataMat)
+	inArr = array([ffMiles, percentTats, iceCream])
+	classifierResult = classify0((inArr-\
+						minVals)/ranges,normMat,datingLabels,3)
+	print ("You will probably like this person: ",\
+				resultList[classifierResult - 1])
